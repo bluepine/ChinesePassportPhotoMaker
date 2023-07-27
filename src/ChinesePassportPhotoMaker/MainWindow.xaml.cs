@@ -244,9 +244,7 @@ namespace ChinesePassportPhotoMaker
       {
         using (FileStream outStream = new FileStream(saveFileDialog.FileName, FileMode.Create))
         {
-
-          JpegBitmapEncoder encoder = new JpegBitmapEncoder();
-          encoder.QualityLevel = _jpegCompressFactor;
+          PngBitmapEncoder encoder = new PngBitmapEncoder();
           encoder.Frames.Add(bp);
           encoder.Save(outStream);
         }
