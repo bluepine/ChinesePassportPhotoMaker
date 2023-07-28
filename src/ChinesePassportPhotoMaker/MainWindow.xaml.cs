@@ -96,15 +96,15 @@ namespace ChinesePassportPhotoMaker
     }
     public static double InnerRefBlockHeight
     {
-      get { return 378; }
+      get { return 331; }
     }
     public static double InnerRefBlockX
     {
-      get { return UpperRedBlockHeight * 1.5; }
+      get { return (OutterRefBlockWidth - InnerRefBlockWidth)/2; }
     }
     public static double InnerRefBlockY
     {
-      get { return UpperRedBlockHeight * 1.5;}
+      get { return (OutterRefBlockHeight - InnerRefBlockHeight)/2;}
     }
     public static Rect OutterRefBlock
     {
@@ -125,7 +125,7 @@ namespace ChinesePassportPhotoMaker
     }
 
     private readonly double _overlayFloatingUpperLimit= UpperRedBlockHeight;
-    private readonly double _overlayFloatingLowerLimit = ImageViewerHeight / 3.0;
+    private readonly double _overlayFloatingLowerLimit = ImageViewerHeight - LowerRedBlockHeight - OutterRefBlockHeight;
 
 
     public MainWindow()
@@ -283,10 +283,17 @@ namespace ChinesePassportPhotoMaker
           _overlayFloatingViewerControl.CoordMouseDownY;
         _overlayFloatingViewerControl.CoordMouseInMovingY = Mouse.GetPosition(Application.Current.MainWindow).Y;
         CurrentY = _overlayFloatingViewerControl.GetCoordsY();
-        if (CurrentY > _overlayFloatingUpperLimit && CurrentY < _overlayFloatingLowerLimit)
-        {
-          Canvas.SetTop(OverlayFloating, _overlayFloatingViewerControl.GetCoordsY());
-        }
+        if(CurrentY < _overlayFloatingUpperLimit)
+          CurrentY = _overlayFloatingUpperLimit;
+
+        if(CurrentY > _overlayFloatingLowerLimit)
+          CurrentY = _overlayFloatingLowerLimit;
+          
+        Canvas.SetTop(OverlayFloating, CurrentY);
+        // if (CurrentY > _overlayFloatingUpperLimit && CurrentY < _overlayFloatingLowerLimit)
+        // {
+        //   Canvas.SetTop(OverlayFloating, _overlayFloatingViewerControl.GetCoordsY());
+        // }
         if (CurrentY <= _overlayFloatingUpperLimit)
           _overlayFloatingViewerControl.CanvasY = _overlayFloatingUpperLimit;
         if (CurrentY >= _overlayFloatingLowerLimit)
