@@ -92,7 +92,7 @@
       <Border Grid.Column="0"
                 Width="{x:Static local:MainWindow.ImageViewerBorderWidth}"
                 Height="{x:Static local:MainWindow.ImageViewerBorderHeight}"
-                Background="GhostWhite" BorderBrush="Gainsboro" BorderThickness="10">
+                Background="GhostWhite" BorderBrush="Gainsboro" BorderThickness="{x:Static local:MainWindow.ImageViewerBorderTickness}">
         <Grid>
           <Canvas x:Name="ImageCanvas"
                   Width = "{x:Static local:MainWindow.ImageViewerWidthD}"

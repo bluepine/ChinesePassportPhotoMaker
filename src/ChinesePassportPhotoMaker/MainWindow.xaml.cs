@@ -49,9 +49,9 @@ namespace ChinesePassportPhotoMaker
     public static readonly int  ImageViewerWidth = 354;
     public static readonly int ImageViewerHeight = 472;
 
-    public static readonly double ImageViewerBorderTickness = 10.0;
-    public static readonly double ImageViewerBorderWidth = ImageViewerWidth + ImageViewerBorderTickness * 2;
-    public static readonly double ImageViewerBorderHeight = ImageViewerHeight + ImageViewerBorderTickness * 2;
+    public static readonly Thickness ImageViewerBorderTickness = new Thickness(10);
+    public static readonly double ImageViewerBorderWidth = ImageViewerWidth + ImageViewerBorderTickness.Bottom * 2;
+    public static readonly double ImageViewerBorderHeight = ImageViewerHeight + ImageViewerBorderTickness.Bottom * 2;
 
     public static readonly double ImageViewerWidthD = ImageViewerWidth;
     public static readonly double ImageViewerHeightD = ImageViewerHeight;
