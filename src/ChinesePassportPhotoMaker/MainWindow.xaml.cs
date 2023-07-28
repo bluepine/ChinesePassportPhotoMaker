@@ -405,7 +405,7 @@ namespace ChinesePassportPhotoMaker
       Hyperlink link = sender as Hyperlink;
       System.Diagnostics.Process.Start(new ProcessStartInfo
       {
-        FileName = "https://ppt.mfa.gov.cn/appo/page/instruction.html",
+        FileName = "http://cs.mfa.gov.cn/zlbg/bgzl/hzlxz/202204/t20220408_10665772.shtml",
         UseShellExecute = true
       });
     }
