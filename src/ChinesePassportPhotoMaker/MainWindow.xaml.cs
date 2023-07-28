@@ -45,77 +45,66 @@ namespace ChinesePassportPhotoMaker
     private ObjectManipulationControl _exampleImageViewerControl = new ObjectManipulationControl(0,0);
     private ObjectManipulationControl _loadedImageViewerControl = new ObjectManipulationControl(0, 0);
     private ObjectManipulationControl _overlayFloatingViewerControl = new ObjectManipulationControl(0, 0);
-    public static double RequiredPhotoWidthMM = 33.0;
-    public static double RequiredPhotoHeightMM = 48.0;
-    public static double ImageWidth = 613.81;
-    public static double ImageHeight = 818.41;
-    public static double ImageViewX = -114.0;
-    public static double ImageViewY = -52.0;
-    public static int ImageViewerWidth = 390;
-    public static int ImageViewerHeight = 567;
-    public static double ImageViewerWidthD
-    {
-      get { return (double)ImageViewerWidth; }
-    }
-    public static double ImageViewerHeightD
-    {
-      get { return (double)ImageViewerHeight; }
-    }
-    public static double YellowBlockWidth
-    {
-      get { return (double)ImageViewerWidth / RequiredPhotoWidthMM * 16.5; }
-    }
-    public static double YellowBlockHeight
-    {
-      get { return (double)ImageViewerHeight / RequiredPhotoHeightMM * 2.0; }
-    }
-    public static double YellowBlockX
-    {
-      get { return (double)ImageViewerWidth / RequiredPhotoWidthMM * 8.25; }
-    }
-    public static double YellowBlockY
-    {
-      get { return (double)ImageViewerHeight / RequiredPhotoHeightMM * 3.0; }
-    }
+
+    public static readonly int  ImageViewerWidth = 354;
+    public static readonly int ImageViewerHeight = 472;
+
+    public static readonly double ImageViewerBorderTickness = 10.0;
+    public static readonly double ImageViewerBorderWidth = ImageViewerWidth + ImageViewerBorderTickness * 2;
+    public static readonly double ImageViewerBorderHeight = ImageViewerHeight + ImageViewerBorderTickness * 2;
+
+    public static readonly double ImageViewerWidthD = ImageViewerWidth;
+    public static readonly double ImageViewerHeightD = ImageViewerHeight;
+    public static readonly double ImageWidth = ImageViewerWidth * 2;
+    public static readonly double ImageHeight = ImageViewerHeight * 2;
+    public static readonly double ImageViewX = ImageViewerWidth / -2.0;
+    public static readonly double ImageViewY = ImageViewerHeight / -2.0;
+    
+    
+    public static readonly double YellowBlockWidth = ImageViewerWidth / 2.0;
+    
+    public static readonly double YellowBlockHeight = 15;
+    
+    public static readonly double YellowBlockX = (ImageViewerWidth - YellowBlockWidth) /2;
+    
+    public static readonly double YellowBlockY = UpperRedBlockHeight;
+    
     public static double UpperRedBlockHeight
     {
-      get { return (double)ImageViewerHeight / RequiredPhotoHeightMM * 3.0; }
+      get { return 10; }
     }
+    
     public static double LowerRedBlockHeight
     {
-      get { return (double)ImageViewerHeight / RequiredPhotoHeightMM * 7.0; }
+      get { return ImageViewerHeight - UpperRedBlockHeight - OutterRefBlockHeight - YellowBlockHeight ;}
     }
     public static double LowerRedBlockY
     {
-      get { return (double)ImageViewerHeight / (RequiredPhotoHeightMM) * (RequiredPhotoHeightMM - 7.0); }
+      get { return ImageViewerHeight - LowerRedBlockHeight;}
     }
     public static double HorizontalCenterX
     {
-      get { return (double)ImageViewerWidth / RequiredPhotoWidthMM * ( RequiredPhotoWidthMM / 2.0); }
+      get { return (double)ImageViewerWidth / 2; }
     }
-    public static double OutterRefBlockWidth
-    {
-      get { return (double)ImageViewerWidth / RequiredPhotoWidthMM * 22.0; }
-    }
-    public static double OutterRefBlockHeight
-    {
-      get { return (double)ImageViewerHeight / RequiredPhotoHeightMM * 33.0; }
-    }
+    public static double OutterRefBlockWidth = 253;
+    
+    public static double OutterRefBlockHeight = 378;
+    
     public static double InnerRefBlockWidth
     {
-      get { return (double)ImageViewerWidth / RequiredPhotoWidthMM * 15.0; }
+      get { return 177; }
     }
     public static double InnerRefBlockHeight
     {
-      get { return (double)ImageViewerHeight / RequiredPhotoHeightMM * 28.0; }
+      get { return 378; }
     }
     public static double InnerRefBlockX
     {
-      get { return (double)ImageViewerWidth / RequiredPhotoWidthMM * (22.0 - 15.0) /2.0; }
+      get { return UpperRedBlockHeight * 1.5; }
     }
     public static double InnerRefBlockY
     {
-      get { return (double)ImageViewerHeight / RequiredPhotoHeightMM * ((33.0 - 28.0) /2.0); }
+      get { return UpperRedBlockHeight * 1.5;}
     }
     public static Rect OutterRefBlock
     {
@@ -128,16 +117,15 @@ namespace ChinesePassportPhotoMaker
 
     public static double OverlayFloatingViewerX
     {
-      get { return (double)ImageViewerWidth / RequiredPhotoWidthMM * (RequiredPhotoWidthMM - 22.0) / 2.0; }
+      get { return (ImageViewerWidth - OutterRefBlockWidth) / 2.0; }
     }
     public static double OverlayFloatingViewerY
     {
-      get { return (double)ImageViewerHeight / RequiredPhotoHeightMM * 3.75; }
+      get { return UpperRedBlockHeight + YellowBlockHeight; }
     }
 
-    private double _overlayFloatingUpperLimit= 16.0;
-    private double _overlayFloatingLowerLimit = 116.0;
-    private int _jpegCompressFactor = 98;
+    private readonly double _overlayFloatingUpperLimit= UpperRedBlockHeight;
+    private readonly double _overlayFloatingLowerLimit = ImageViewerHeight / 3.0;
 
 
     public MainWindow()
@@ -238,44 +226,13 @@ namespace ChinesePassportPhotoMaker
       SaveFileDialog saveFileDialog = new SaveFileDialog();
       saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
       saveFileDialog.Filter =
-        "Jpeg文件|" +
-        "*.jpg";
+        "PNG文件|" +
+        "*.png";
       if (saveFileDialog.ShowDialog() == true)
       {
         using (FileStream outStream = new FileStream(saveFileDialog.FileName, FileMode.Create))
         {
           PngBitmapEncoder encoder = new PngBitmapEncoder();
-          encoder.Frames.Add(bp);
-          encoder.Save(outStream);
-        }
-      }
-      ImageOnlyCanvas.LayoutTransform = transform;
-    }
-
-    private void SaveImageFromCanvasToFile2()
-    {
-      Transform transform = ImageCanvas.LayoutTransform;
-      ImageCanvas.LayoutTransform = null;
-      Size size = new Size(ImageCanvas.Width, ImageCanvas.Height);
-      ImageCanvas.Measure(size);
-      ImageCanvas.Arrange(new Rect(size));
-      RenderTargetBitmap renderBitmap = new RenderTargetBitmap((int)size.Width, (int)size.Height, 96d, 96d, PixelFormats.Default);
-      renderBitmap.Render(ImageOnlyCanvas);
-      ImageSource im = (ImageSource)renderBitmap.Clone();
-      BitmapFrame bp = CreateResizedImage(im, 390, 567, 0); // Around 300 DPI
-
-      SaveFileDialog saveFileDialog = new SaveFileDialog();
-      saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-      saveFileDialog.Filter =
-        "Jpeg文件|" +
-        "*.jpg";
-      if (saveFileDialog.ShowDialog() == true)
-      {
-        using (FileStream outStream = new FileStream(saveFileDialog.FileName, FileMode.Create))
-        {
-
-          JpegBitmapEncoder encoder = new JpegBitmapEncoder();
-          encoder.QualityLevel = _jpegCompressFactor;
           encoder.Frames.Add(bp);
           encoder.Save(outStream);
         }
@@ -456,12 +413,6 @@ namespace ChinesePassportPhotoMaker
     {
       SaveImageFromCanvasToFile();
     }
-
-    private void jpegCompressRatioTextBox_TextChanged(object sender, TextChangedEventArgs e)
-    {
-      int.TryParse(jpegCompressRatioTextBox.Text, out _jpegCompressFactor);
-    }
-
     private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
     {
       System.Windows.Application.Current.Shutdown();

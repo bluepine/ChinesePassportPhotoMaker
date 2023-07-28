@@ -57,22 +57,18 @@
               -->
             </Grid.ColumnDefinitions>
             <Button Grid.Column="0" x:Name="OpenFileButton" Click="OpenFileButton_Click">打开照片</Button>
-            <Grid Grid.Column="2">
-              <Grid.RowDefinitions>
-                <RowDefinition Height="1*"/>
-                <RowDefinition Height="1*"/>
-              </Grid.RowDefinitions>
-              <Button Grid.Row="0" x:Name="SaveFileButton" Click="SaveFileButton_Click">保存照片</Button>
-              <Grid Grid.Row="1">
+            
+              <Button Grid.Column="2" x:Name="SaveFileButton" Click="SaveFileButton_Click">保存照片</Button>
+              <!-- <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
                   <ColumnDefinition Width="2*"/>
                   <ColumnDefinition Width="1*"/>
                 </Grid.ColumnDefinitions>
                 <Label Grid.Column="0">压缩系数:</Label>
                 <TextBox Grid.Column="1" Height="18" MinWidth="30" TextAlignment="Right" VerticalAlignment="Center"
-                         x:Name="jpegCompressRatioTextBox" TextChanged="jpegCompressRatioTextBox_TextChanged">98</TextBox>
-              </Grid>
-            </Grid>
+                         x:Name="jpegCompressRatioTextBox" >没有用到</TextBox>
+              </Grid> -->
+            
             <WrapPanel Grid.Column="4" VerticalAlignment="Center">
               <CheckBox x:Name="ShowGuidesCheckBox" Checked="ShowGuidesCheckBox_Checked" Unchecked="ShowGuidesCheckBox_Unchecked" IsChecked="True">显示辅助线</CheckBox>
               <CheckBox x:Name="ShowHelpersCheckBox" Checked="ShowHelpersCheckBox_Checked" Unchecked="ShowHelpersCheckBox_Unchecked" IsChecked="True">显示说明</CheckBox>
@@ -94,9 +90,9 @@
         <ColumnDefinition Width="1*"/>
       </Grid.ColumnDefinitions>
       <Border Grid.Column="0"
-                Width="{StaticResource PhotoBoderWidth}"
-                Height="{StaticResource PhotoBoderHeight}"
-                Background="GhostWhite" BorderBrush="Gainsboro" BorderThickness="5">
+                Width="{x:Static local:MainWindow.ImageViewerBorderWidth}"
+                Height="{x:Static local:MainWindow.ImageViewerBorderHeight}"
+                Background="GhostWhite" BorderBrush="Gainsboro" BorderThickness="10">
         <Grid>
           <Canvas x:Name="ImageCanvas"
                   Width = "{x:Static local:MainWindow.ImageViewerWidthD}"
