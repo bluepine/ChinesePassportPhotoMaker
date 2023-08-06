@@ -238,8 +238,8 @@ namespace ChinesePassportPhotoMaker
       SaveFileDialog saveFileDialog = new SaveFileDialog();
       saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
       saveFileDialog.Filter =
-        "Jpeg文件|" +
-        "*.jpg";
+        "png文件|" +
+        "*.png";
       if (saveFileDialog.ShowDialog() == true)
       {
         using (FileStream outStream = new FileStream(saveFileDialog.FileName, FileMode.Create))
@@ -252,36 +252,7 @@ namespace ChinesePassportPhotoMaker
       ImageOnlyCanvas.LayoutTransform = transform;
     }
 
-    private void SaveImageFromCanvasToFile2()
-    {
-      Transform transform = ImageCanvas.LayoutTransform;
-      ImageCanvas.LayoutTransform = null;
-      Size size = new Size(ImageCanvas.Width, ImageCanvas.Height);
-      ImageCanvas.Measure(size);
-      ImageCanvas.Arrange(new Rect(size));
-      RenderTargetBitmap renderBitmap = new RenderTargetBitmap((int)size.Width, (int)size.Height, 96d, 96d, PixelFormats.Default);
-      renderBitmap.Render(ImageOnlyCanvas);
-      ImageSource im = (ImageSource)renderBitmap.Clone();
-      BitmapFrame bp = CreateResizedImage(im, 390, 567, 0); // Around 300 DPI
-
-      SaveFileDialog saveFileDialog = new SaveFileDialog();
-      saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-      saveFileDialog.Filter =
-        "Jpeg文件|" +
-        "*.jpg";
-      if (saveFileDialog.ShowDialog() == true)
-      {
-        using (FileStream outStream = new FileStream(saveFileDialog.FileName, FileMode.Create))
-        {
-
-          JpegBitmapEncoder encoder = new JpegBitmapEncoder();
-          encoder.QualityLevel = _jpegCompressFactor;
-          encoder.Frames.Add(bp);
-          encoder.Save(outStream);
-        }
-      }
-      ImageOnlyCanvas.LayoutTransform = transform;
-    }
+    
 
     /*
      * UI related events here
