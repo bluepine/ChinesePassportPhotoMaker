@@ -15,6 +15,8 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Windows.Interop;
+//using System.Drawing;
 /*
  * Todos
  * 让绿色方框无法移动过红色区域
@@ -204,7 +206,7 @@ namespace ChinesePassportPhotoMaker
       var group = new DrawingGroup();
       RenderOptions.SetBitmapScalingMode(group, BitmapScalingMode.HighQuality);
 
-      
+
 
       var drawingVisual = new DrawingVisual();
       using (var drawingContext = drawingVisual.RenderOpen())
@@ -219,16 +221,34 @@ namespace ChinesePassportPhotoMaker
       return BitmapFrame.Create(resizedImage);
     }
 
+    public int GetPixelWidth(double width)
+    {
+      using (var graphics = System.Drawing.Graphics.FromHwnd(IntPtr.Zero))
+      {
+        return (int)(width * graphics.DpiX / 96.0);
+      }
+    }
+
+    public int GetPixelHeight(double height)
+    {
+      using (var graphics = System.Drawing.Graphics.FromHwnd(IntPtr.Zero))
+      {
+        return (int)(height * graphics.DpiY / 96.0);
+      }
+    }
     private RenderTargetBitmap CanvasToBitMap(Canvas canvas, double dpiX, double dpiY, int width, int height)
     {
       Rect bounds = VisualTreeHelper.GetDescendantBounds(canvas);
+      int canvasPixelWidth = GetPixelWidth(bounds.Width);
+      int canvasPixelHeight = GetPixelHeight(bounds.Height);
       var group = new DrawingGroup();
       RenderOptions.SetBitmapScalingMode(group, BitmapScalingMode.HighQuality);
-      RenderTargetBitmap originalImage = new RenderTargetBitmap((int)canvas.Width, (int)canvas.Height, _imageViewerControl.Image.DpiX, _imageViewerControl.Image.DpiY, PixelFormats.Default);
+      RenderTargetBitmap originalImage = new RenderTargetBitmap(canvasPixelWidth, canvasPixelHeight, dpiX, dpiY, PixelFormats.Default);
       originalImage.Render(ImageOnlyCanvas);
       ImageSource im = (ImageSource)originalImage.Clone();
-
-      group.Children.Add(new ImageDrawing(im, bounds));
+      RBTToFile(originalImage);
+      Rect pixelBounds = new Rect(0, 0, canvasPixelWidth, canvasPixelHeight);
+      group.Children.Add(new ImageDrawing(im, pixelBounds));
 
       RenderTargetBitmap rtb = new RenderTargetBitmap(width, height, dpiX, dpiY, System.Windows.Media.PixelFormats.Default);
 
@@ -243,6 +263,25 @@ namespace ChinesePassportPhotoMaker
       rtb.Render(dv);
       return rtb;
     }
+
+    private void RBTToFile(RenderTargetBitmap rbt)
+    {
+      SaveFileDialog saveFileDialog = new SaveFileDialog();
+      saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+      saveFileDialog.Filter =
+        "png文件|" +
+        "*.png";
+      if (saveFileDialog.ShowDialog() == true)
+      {
+        using (FileStream outStream = new FileStream(saveFileDialog.FileName, FileMode.Create))
+        {
+          PngBitmapEncoder encoder = new PngBitmapEncoder();
+          encoder.Frames.Add(BitmapFrame.Create(rbt));
+          encoder.Save(outStream);
+        }
+      }
+    }
+
     /*
      *  Idea is to pull the Canvas
      *  that holds user-edited image,
@@ -261,22 +300,9 @@ namespace ChinesePassportPhotoMaker
       string message = $"dpix: {newDpiX}, dpiY: {newDpiY}";
       showMessage(message);
       RenderTargetBitmap renderBitmap = CanvasToBitMap(ImageOnlyCanvas, newDpiX, newDpiY, ImageViewerWidth, ImageViewerHeight);
-      
+      RBTToFile(renderBitmap);
 
-      SaveFileDialog saveFileDialog = new SaveFileDialog();
-      saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-      saveFileDialog.Filter =
-        "png文件|" +
-        "*.png";
-      if (saveFileDialog.ShowDialog() == true)
-      {
-        using (FileStream outStream = new FileStream(saveFileDialog.FileName, FileMode.Create))
-        {
-          PngBitmapEncoder encoder = new PngBitmapEncoder();
-          encoder.Frames.Add(BitmapFrame.Create(renderBitmap));
-          encoder.Save(outStream);
-        }
-      }
+
       ImageOnlyCanvas.LayoutTransform = transform;
     }
 
@@ -426,7 +452,7 @@ namespace ChinesePassportPhotoMaker
     private void OpenFileButton_Click(object sender, RoutedEventArgs e)
     {
       OpenFileDialog openFileDialog = new OpenFileDialog();
-      openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+      openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
       openFileDialog.Filter =
         "图片文件|" +
         "*.bmp;*.tif;*.tif;*.png;*.jpg;*.jpeg;|" +
