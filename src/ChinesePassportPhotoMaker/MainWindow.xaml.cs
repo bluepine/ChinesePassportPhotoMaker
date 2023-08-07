@@ -221,47 +221,63 @@ namespace ChinesePassportPhotoMaker
       return BitmapFrame.Create(resizedImage);
     }
 
-    public int GetPixelWidth(double width)
+    public double GetScreenDpiX()
     {
       using (var graphics = System.Drawing.Graphics.FromHwnd(IntPtr.Zero))
       {
-        return (int)(width * graphics.DpiX / 96.0);
+        return graphics.DpiX;
       }
+    }
+    public double GetScreenDpiY()
+    {
+      using (var graphics = System.Drawing.Graphics.FromHwnd(IntPtr.Zero))
+      {
+        return graphics.DpiY;
+      }
+    }
+    public int GetPixelWidth(double width, double newDpiX)
+    {
+      return (int)(width * newDpiX / GetScreenDpiX());
     }
 
-    public int GetPixelHeight(double height)
+    public int GetPixelHeight(double height, double newDpiY)
     {
-      using (var graphics = System.Drawing.Graphics.FromHwnd(IntPtr.Zero))
-      {
-        return (int)(height * graphics.DpiY / 96.0);
-      }
+      return (int)(height * newDpiY / GetScreenDpiY());
     }
-    private RenderTargetBitmap CanvasToBitMap(Canvas canvas, double dpiX, double dpiY, int width, int height)
+    private TransformedBitmap CanvasToBitMap(Canvas canvas, double dpiX, double dpiY, int width, int height)
     {
       Rect bounds = VisualTreeHelper.GetDescendantBounds(canvas);
-      int canvasPixelWidth = GetPixelWidth(bounds.Width);
-      int canvasPixelHeight = GetPixelHeight(bounds.Height);
-      var group = new DrawingGroup();
-      RenderOptions.SetBitmapScalingMode(group, BitmapScalingMode.HighQuality);
+      int canvasPixelWidth = GetPixelWidth(width, dpiX);
+      int canvasPixelHeight = GetPixelHeight(height, dpiY);
+
       RenderTargetBitmap originalImage = new RenderTargetBitmap(canvasPixelWidth, canvasPixelHeight, dpiX, dpiY, PixelFormats.Default);
-      originalImage.Render(ImageOnlyCanvas);
-      ImageSource im = (ImageSource)originalImage.Clone();
+      originalImage.Render(canvas);
+      BitmapSource im = (BitmapSource)originalImage.Clone();
       RBTToFile(originalImage);
-      Rect pixelBounds = new Rect(0, 0, canvasPixelWidth, canvasPixelHeight);
-      group.Children.Add(new ImageDrawing(im, pixelBounds));
 
-      RenderTargetBitmap rtb = new RenderTargetBitmap(width, height, dpiX, dpiY, System.Windows.Media.PixelFormats.Default);
+      TransformedBitmap tbp = new TransformedBitmap(im, 
+    new ScaleTransform(
+        (double)width / canvasPixelWidth, 
+        (double)height / canvasPixelHeight));
+      return tbp;
+      // var group = new DrawingGroup();
+      
+      // RenderOptions.SetBitmapScalingMode(group, BitmapScalingMode.HighQuality);
+      // Rect pixelBounds = new Rect(0, 0, canvasPixelWidth, canvasPixelHeight);
+      // group.Children.Add(new ImageDrawing(im, pixelBounds));
 
-      DrawingVisual dv = new DrawingVisual();
-      using (DrawingContext dc = dv.RenderOpen())
-      {
-        dc.DrawDrawing(group);
-        // VisualBrush vb = new VisualBrush(canvas);
-        // dc.DrawRectangle(vb, null, new Rect(new Point(), bounds.Size));
-      }
+      // RenderTargetBitmap rtb = new RenderTargetBitmap(width, height, dpiX * canvasPixelWidth / width, dpiY * canvasPixelHeight / height, System.Windows.Media.PixelFormats.Default);
 
-      rtb.Render(dv);
-      return rtb;
+      // DrawingVisual dv = new DrawingVisual();
+      // using (DrawingContext dc = dv.RenderOpen())
+      // {
+      //   dc.DrawDrawing(group);
+      //   // VisualBrush vb = new VisualBrush(canvas);
+      //   // dc.DrawRectangle(vb, null, new Rect(new Point(), bounds.Size));
+      // }
+
+      // rtb.Render(dv);
+      // return rtb;
     }
 
     private void RBTToFile(RenderTargetBitmap rbt)
@@ -277,6 +293,24 @@ namespace ChinesePassportPhotoMaker
         {
           PngBitmapEncoder encoder = new PngBitmapEncoder();
           encoder.Frames.Add(BitmapFrame.Create(rbt));
+          encoder.Save(outStream);
+        }
+      }
+    }
+
+    private void BSToFile(BitmapSource bs)
+    {
+      SaveFileDialog saveFileDialog = new SaveFileDialog();
+      saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+      saveFileDialog.Filter =
+        "png文件|" +
+        "*.png";
+      if (saveFileDialog.ShowDialog() == true)
+      {
+        using (FileStream outStream = new FileStream(saveFileDialog.FileName, FileMode.Create))
+        {
+          PngBitmapEncoder encoder = new PngBitmapEncoder();
+          encoder.Frames.Add(BitmapFrame.Create(bs));
           encoder.Save(outStream);
         }
       }
@@ -299,8 +333,8 @@ namespace ChinesePassportPhotoMaker
       double newDpiY = _loadedImageViewerControl.Image.DpiY * _loadedImageViewerControl.Image.PixelHeight / _loadedImageViewerControl.ImageHeight;
       string message = $"dpix: {newDpiX}, dpiY: {newDpiY}";
       showMessage(message);
-      RenderTargetBitmap renderBitmap = CanvasToBitMap(ImageOnlyCanvas, newDpiX, newDpiY, ImageViewerWidth, ImageViewerHeight);
-      RBTToFile(renderBitmap);
+      TransformedBitmap renderBitmap = CanvasToBitMap(ImageOnlyCanvas, newDpiX, newDpiY, ImageViewerWidth, ImageViewerHeight);
+      BSToFile(renderBitmap);
 
 
       ImageOnlyCanvas.LayoutTransform = transform;
