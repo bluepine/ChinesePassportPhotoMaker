@@ -246,7 +246,6 @@ namespace ChinesePassportPhotoMaker
     }
     private TransformedBitmap CanvasToBitMap(Canvas canvas, double dpiX, double dpiY, int width, int height)
     {
-      Rect bounds = VisualTreeHelper.GetDescendantBounds(canvas);
       int canvasPixelWidth = GetPixelWidth(width, dpiX);
       int canvasPixelHeight = GetPixelHeight(height, dpiY);
 
