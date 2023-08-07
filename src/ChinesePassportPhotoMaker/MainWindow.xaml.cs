@@ -252,7 +252,7 @@ namespace ChinesePassportPhotoMaker
       RenderTargetBitmap originalImage = new RenderTargetBitmap(canvasPixelWidth, canvasPixelHeight, dpiX, dpiY, PixelFormats.Default);
       originalImage.Render(canvas);
       BitmapSource im = (BitmapSource)originalImage.Clone();
-      RBTToFile(originalImage);
+      // RBTToFile(originalImage);
 
       TransformedBitmap tbp = new TransformedBitmap(im, 
     new ScaleTransform(
