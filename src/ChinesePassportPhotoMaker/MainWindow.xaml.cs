@@ -42,13 +42,13 @@ namespace ChinesePassportPhotoMaker
      *  
      */
     private ObjectManipulationControl _imageViewerControl = new ObjectManipulationControl(0, 0);
-    private ObjectManipulationControl _exampleImageViewerControl = new ObjectManipulationControl(0,0);
+    private ObjectManipulationControl _exampleImageViewerControl = new ObjectManipulationControl(0, 0);
     private ObjectManipulationControl _loadedImageViewerControl = new ObjectManipulationControl(0, 0);
     private ObjectManipulationControl _overlayFloatingViewerControl = new ObjectManipulationControl(0, 0);
     public static double RequiredPhotoWidthMM = 33.0;
     public static double RequiredPhotoHeightMM = 48.0;
-    public static double ImageWidth = 613.81;
-    public static double ImageHeight = 818.41;
+    public static double ImageWidth = 2320;
+    public static double ImageHeight = 3088;
     public static double ImageViewX = -114.0;
     public static double ImageViewY = -52.0;
     public static int ImageViewerWidth = 390;
@@ -91,7 +91,7 @@ namespace ChinesePassportPhotoMaker
     }
     public static double HorizontalCenterX
     {
-      get { return (double)ImageViewerWidth / RequiredPhotoWidthMM * ( RequiredPhotoWidthMM / 2.0); }
+      get { return (double)ImageViewerWidth / RequiredPhotoWidthMM * (RequiredPhotoWidthMM / 2.0); }
     }
     public static double OutterRefBlockWidth
     {
@@ -111,11 +111,11 @@ namespace ChinesePassportPhotoMaker
     }
     public static double InnerRefBlockX
     {
-      get { return (double)ImageViewerWidth / RequiredPhotoWidthMM * (22.0 - 15.0) /2.0; }
+      get { return (double)ImageViewerWidth / RequiredPhotoWidthMM * (22.0 - 15.0) / 2.0; }
     }
     public static double InnerRefBlockY
     {
-      get { return (double)ImageViewerHeight / RequiredPhotoHeightMM * ((33.0 - 28.0) /2.0); }
+      get { return (double)ImageViewerHeight / RequiredPhotoHeightMM * ((33.0 - 28.0) / 2.0); }
     }
     public static Rect OutterRefBlock
     {
@@ -135,7 +135,7 @@ namespace ChinesePassportPhotoMaker
       get { return (double)ImageViewerHeight / RequiredPhotoHeightMM * 3.75; }
     }
 
-    private double _overlayFloatingUpperLimit= 16.0;
+    private double _overlayFloatingUpperLimit = 16.0;
     private double _overlayFloatingLowerLimit = 116.0;
     private int _jpegCompressFactor = 98;
 
@@ -197,13 +197,14 @@ namespace ChinesePassportPhotoMaker
      * This is from:
      * https://stackoverflow.com/questions/15779564/resize-image-in-wpf/24419190
      */
-    private BitmapFrame CreateResizedImage(ImageSource source, int width, int height, int margin)
+    private BitmapFrame CreateResizedImage(ImageSource source, int width, int height, int margin, double newDpiX, double newDpiY)
     {
       var rect = new Rect(margin, margin, width - margin * 2, height - margin * 2);
 
       var group = new DrawingGroup();
       RenderOptions.SetBitmapScalingMode(group, BitmapScalingMode.HighQuality);
-      group.Children.Add(new ImageDrawing(source, rect));
+
+      
 
       var drawingVisual = new DrawingVisual();
       using (var drawingContext = drawingVisual.RenderOpen())
@@ -211,11 +212,36 @@ namespace ChinesePassportPhotoMaker
 
       var resizedImage = new RenderTargetBitmap(
           width, height,         // Resized dimensions
-          96, 96,                // Default DPI values
+            newDpiX, newDpiY,
           PixelFormats.Default); // Default pixel format
       resizedImage.Render(drawingVisual);
 
       return BitmapFrame.Create(resizedImage);
+    }
+
+    private RenderTargetBitmap CanvasToBitMap(Canvas canvas, double dpiX, double dpiY, int width, int height)
+    {
+      Rect bounds = VisualTreeHelper.GetDescendantBounds(canvas);
+      var group = new DrawingGroup();
+      RenderOptions.SetBitmapScalingMode(group, BitmapScalingMode.HighQuality);
+      RenderTargetBitmap originalImage = new RenderTargetBitmap((int)canvas.Width, (int)canvas.Height, _imageViewerControl.Image.DpiX, _imageViewerControl.Image.DpiY, PixelFormats.Default);
+      originalImage.Render(ImageOnlyCanvas);
+      ImageSource im = (ImageSource)originalImage.Clone();
+
+      group.Children.Add(new ImageDrawing(im, bounds));
+
+      RenderTargetBitmap rtb = new RenderTargetBitmap(width, height, dpiX, dpiY, System.Windows.Media.PixelFormats.Default);
+
+      DrawingVisual dv = new DrawingVisual();
+      using (DrawingContext dc = dv.RenderOpen())
+      {
+        dc.DrawDrawing(group);
+        // VisualBrush vb = new VisualBrush(canvas);
+        // dc.DrawRectangle(vb, null, new Rect(new Point(), bounds.Size));
+      }
+
+      rtb.Render(dv);
+      return rtb;
     }
     /*
      *  Idea is to pull the Canvas
@@ -230,10 +256,12 @@ namespace ChinesePassportPhotoMaker
       Size size = new Size(ImageCanvas.Width, ImageCanvas.Height);
       ImageCanvas.Measure(size);
       ImageCanvas.Arrange(new Rect(size));
-      RenderTargetBitmap renderBitmap = new RenderTargetBitmap((int)size.Width, (int)size.Height, 96d, 96d, PixelFormats.Default);
-      renderBitmap.Render(ImageOnlyCanvas);
-      ImageSource im = (ImageSource)renderBitmap.Clone();
-      BitmapFrame bp = CreateResizedImage(im, ImageViewerWidth, ImageViewerHeight, 0); // Around 300 DPI
+      double newDpiX = _loadedImageViewerControl.Image.DpiX * _loadedImageViewerControl.Image.PixelWidth / _loadedImageViewerControl.ImageWidth;
+      double newDpiY = _loadedImageViewerControl.Image.DpiY * _loadedImageViewerControl.Image.PixelHeight / _loadedImageViewerControl.ImageHeight;
+      string message = $"dpix: {newDpiX}, dpiY: {newDpiY}";
+      showMessage(message);
+      RenderTargetBitmap renderBitmap = CanvasToBitMap(ImageOnlyCanvas, newDpiX, newDpiY, ImageViewerWidth, ImageViewerHeight);
+      
 
       SaveFileDialog saveFileDialog = new SaveFileDialog();
       saveFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
@@ -245,14 +273,14 @@ namespace ChinesePassportPhotoMaker
         using (FileStream outStream = new FileStream(saveFileDialog.FileName, FileMode.Create))
         {
           PngBitmapEncoder encoder = new PngBitmapEncoder();
-          encoder.Frames.Add(bp);
+          encoder.Frames.Add(BitmapFrame.Create(renderBitmap));
           encoder.Save(outStream);
         }
       }
       ImageOnlyCanvas.LayoutTransform = transform;
     }
 
-    
+
 
     /*
      * UI related events here
@@ -371,7 +399,7 @@ namespace ChinesePassportPhotoMaker
 
     private void ShowHelpersCheckBox_Unchecked(object sender, RoutedEventArgs e)
     {
-      if(Helpers != null)
+      if (Helpers != null)
       {
         Helpers.Visibility = Visibility.Collapsed;
       }
@@ -391,6 +419,10 @@ namespace ChinesePassportPhotoMaker
 
     }
 
+    private void showMessage(string message)
+    {
+      MessageBox.Show(message);
+    }
     private void OpenFileButton_Click(object sender, RoutedEventArgs e)
     {
       OpenFileDialog openFileDialog = new OpenFileDialog();
@@ -404,9 +436,9 @@ namespace ChinesePassportPhotoMaker
       {
         _loadedImageViewerControl = new ObjectManipulationControl(0, 0);
         _loadedImageViewerControl.Image = new BitmapImage(
-          new Uri(openFileDialog.FileName, 
+          new Uri(openFileDialog.FileName,
           UriKind.Absolute));
-        _loadedImageViewerControl.SetImageWidthHeight(ImageWidth, ImageHeight);
+        _loadedImageViewerControl.SetImageWidthHeight(_loadedImageViewerControl.Image.PixelWidth, _loadedImageViewerControl.Image.PixelHeight);
         SwitchToLoadedImage();
         ShowExampleCheckBox.IsChecked = false;
       }
